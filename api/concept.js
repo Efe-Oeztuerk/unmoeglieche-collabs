@@ -1,6 +1,4 @@
-import { runModel, readBody, cleanText, fail, ConfigError } from "./_cf.js";
-
-const TEXT_MODEL = process.env.CF_TEXT_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+import { runModel, readBody, cleanText, fail, ConfigError, TEXT_MODEL } from "./_cf.js";
 
 const SYSTEM = `You are the creative director of a high-end industrial design studio.
 A brand is releasing a product that has nothing to do with its usual business. Treat it completely seriously, like a real luxury collaboration launch, and push the brand's design language as far as it goes: signature materials, colours, shapes, details, finishes and attitude.
@@ -8,12 +6,14 @@ A brand is releasing a product that has nothing to do with its usual business. T
 Reply with ONLY one JSON object, no other text:
 {
   "name": "product name, max 4 words",
-  "slogan": "German advertising slogan, max 9 words, witty",
+  "slogan": "German advertising slogan, max 9 words",
   "description": "German, 2 short sentences: what it looks like and what makes it special",
-  "features": ["3 German features, max 7 words each, brand-typical and a bit absurd"],
+  "features": ["3 German features, max 7 words each"],
   "price": "German price string, e.g. \\"2.490 €\\"",
   "image_prompt": "English prompt for a photorealistic product photo, 60-110 words"
 }
+
+Rules for the German texts: be genuinely funny and specific. The slogan is a clever pun that mixes the brand's famous attitude or claim with what the product does (good: "Von 0 auf knusprig in 2,9 Sekunden." for a Ferrari air fryer; bad: generic lines like "Klein aber fein" or "Qualität, die begeistert"). The name sounds like a real model name of that brand. Features name concrete, brand-typical technology applied absurdly to the product (good: "Launch Control für Pommes"). Write natural German with correct umlauts.
 
 Rules for image_prompt: professional commercial product photography of the single product, clearly recognisable as the product type, fully designed in the brand's style (name the concrete materials, colours, design cues and the brand emblem placement). Describe a fitting premium setting (studio sweep or a brand-typical showroom), lighting (softbox, rim light, reflections), camera (85mm, shallow depth of field), "ultra realistic, 8k, sharp focus". One product only, no people, no text overlays.`;
 
