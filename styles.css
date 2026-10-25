@@ -300,7 +300,7 @@ details.own[open] summary::before { content: "−"; }
 /* ---------- Spiel: Bewertung ---------- */
 .vote-wrap { max-width: 760px; margin: 0 auto; padding-block: 28px 72px; display: grid; gap: 18px; }
 .vote-card { overflow: hidden; display: grid; }
-.vote-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.vote-card img { width: 100%; aspect-ratio: 1; max-height: 58vh; object-fit: cover; }
 .vote-body { padding: 22px; display: grid; gap: 10px; }
 .scores { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
 .scores button {
