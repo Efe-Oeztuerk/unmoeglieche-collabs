@@ -4,588 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unmögliche Kollabs</title>
-<meta name="description" content="Zufällige Marke trifft zufälliges Produkt. Die KI entwirft das Kollab-Produkt als realistisches Foto, und du kannst es per Prompt anpassen.">
+<meta name="description" content="Zufällige Marke trifft zufälliges Produkt. Die KI entwirft das Kollab-Produkt als realistisches Foto. Allein im Studio oder als Partyspiel mit Freunden.">
 <meta name="theme-color" content="#09090B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
-<style>
-/* Layout: dunkles Fotostudio. Links die Ziehung und das Datenblatt, rechts die Bühne mit Produktfoto,
-   Bearbeitungsfeld und Versionen. Der Lichtschein hinter der Seite übernimmt die Farbe des aktuellen Fotos. */
-:root {
-  --bg: #09090B;
-  --bg-2: #111114;
-  --glass: rgba(255, 255, 255, 0.045);
-  --glass-strong: rgba(255, 255, 255, 0.075);
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --text: #F4F4F1;
-  --text-2: #A7A7AE;
-  --text-3: #6E6E76;
-  --accent: #8B7BFF;
-  --accent-2: #B6ACFF;
-  --danger: #FF6B6B;
-  --glow: 139, 123, 255;          /* RGB, wird aus dem Foto berechnet */
-  --display: "Archivo", "Arial Black", "Helvetica Neue", Arial, sans-serif;
-  --body: "Geist", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --r-lg: 28px; --r-md: 18px; --r-sm: 12px;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-body {
-  background: var(--bg); color: var(--text);
-  font-family: var(--body); font-size: 15px; line-height: 1.55;
-  -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden;
-}
-/* Lichtschein + Körnung */
-body::before {
-  content: ""; position: fixed; inset: -20vh -20vw auto; height: 95vh; z-index: -2; pointer-events: none;
-  background:
-    radial-gradient(45% 55% at 68% 30%, rgba(var(--glow), 0.30), transparent 70%),
-    radial-gradient(35% 45% at 18% 8%, rgba(var(--glow), 0.12), transparent 70%);
-  filter: blur(20px); transition: background 1.2s ease;
-}
-body::after {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-img { max-width: 100%; display: block; }
-button, input { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-.wrap {
-  max-width: 1280px; margin: 0 auto;
-  padding-left: max(18px, env(safe-area-inset-left, 0px));
-  padding-right: max(18px, env(safe-area-inset-right, 0px));
-}
-
-/* Kopfzeile */
-header.top {
-  position: sticky; top: 0; z-index: 20;
-  padding-top: env(safe-area-inset-top, 0px);
-  background: rgba(9, 9, 11, 0.6); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid var(--line);
-}
-.top-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px; }
-.brandmark { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; }
-.brandmark i { width: 10px; height: 10px; border-radius: 50%; background: rgb(var(--glow)); box-shadow: 0 0 14px rgba(var(--glow), .9); transition: background 1.2s ease, box-shadow 1.2s ease; }
-.top-meta { display: flex; align-items: center; gap: 16px; font-family: var(--mono); font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
-.top-meta a { color: var(--text-2); text-decoration: none; }
-.top-meta a:hover { color: var(--text); }
-
-/* Raster */
-main.grid {
-  display: grid; gap: 28px; padding-block: 32px 24px;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  grid-template-areas: "draw studio" "spec studio";
-  grid-template-rows: auto 1fr;
-  align-items: start;
-}
-.panel {
-  background: var(--glass); border: 1px solid var(--line); border-radius: var(--r-lg);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-}
-
-/* Ziehung */
-.draw { grid-area: draw; padding: 26px; display: grid; gap: 22px; }
-.slot { display: grid; gap: 6px; }
-.label { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); display: flex; justify-content: space-between; gap: 8px; }
-.slot-word {
-  appearance: none; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; text-align: left; color: var(--text);
-  font-family: var(--display); font-weight: 900; font-stretch: 115%;
-  font-size: clamp(36px, 4.6vw, 64px); line-height: .95; letter-spacing: -.02em;
-  overflow-wrap: anywhere; hyphens: auto; transition: color .2s ease, opacity .2s ease;
-}
-.slot-word:hover { color: var(--accent-2); }
-.slot-word.rolling { opacity: .45; }
-.cross-row { display: flex; align-items: center; gap: 14px; color: var(--accent); }
-.cross-row span { font-family: var(--display); font-stretch: 62%; font-size: 34px; line-height: 1; }
-.cross-row hr { flex: 1; border: 0; height: 1px; background: linear-gradient(90deg, var(--line-strong), transparent); margin: 0; }
-
-.actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.btn {
-  appearance: none; cursor: pointer; border-radius: 999px; padding: 13px 22px; border: 1px solid var(--line-strong);
-  background: var(--glass); color: var(--text); font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 8px;
-  text-decoration: none; transition: background .15s ease, transform .1s ease, border-color .15s ease;
-}
-.btn:hover { background: var(--glass-strong); border-color: rgba(255,255,255,.28); }
-.btn:active { transform: translateY(1px); }
-.btn.primary { background: var(--text); color: #0B0B0D; border-color: var(--text); box-shadow: 0 8px 30px -8px rgba(var(--glow), .7); }
-.btn.primary:hover { background: #FFFFFF; }
-.btn.small { padding: 9px 15px; font-size: 13px; }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-.btn svg { width: 16px; height: 16px; }
-
-details.own { border-top: 1px solid var(--line); padding-top: 16px; }
-details.own summary { cursor: pointer; list-style: none; font-size: 13px; color: var(--text-2); }
-details.own summary::-webkit-details-marker { display: none; }
-details.own summary::before { content: "+"; display: inline-block; width: 18px; color: var(--accent); }
-details.own[open] summary::before { content: "−"; }
-.own-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 12px; }
-.field {
-  min-width: 0; background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 11px 12px; color: var(--text);
-}
-.field::placeholder { color: var(--text-3); }
-
-/* Datenblatt */
-.spec { grid-area: spec; padding: 26px; display: grid; gap: 14px; }
-.spec .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.collab { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
-.price { font-family: var(--mono); font-size: 13px; padding: 5px 11px; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-.spec h2 { margin: 0; font-family: var(--display); font-weight: 900; font-stretch: 112%; font-size: clamp(26px, 2.6vw, 36px); line-height: 1.02; letter-spacing: -.01em; text-wrap: balance; }
-.slogan { margin: 0; font-size: 18px; font-weight: 500; color: var(--text); text-wrap: balance; }
-.desc { margin: 0; color: var(--text-2); max-width: 62ch; }
-.features { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
-.features li { display: grid; grid-template-columns: 30px 1fr; align-items: baseline; padding: 11px 14px; border-radius: var(--r-sm); background: rgba(255,255,255,.03); border: 1px solid var(--line); }
-.features b { font-family: var(--mono); font-weight: 400; font-size: 11px; color: var(--text-3); }
-.spec .empty-note { color: var(--text-2); margin: 0; }
-
-/* Bühne */
-.studio { grid-area: studio; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); }
-.stage {
-  position: relative; aspect-ratio: 1; border-radius: var(--r-lg); overflow: hidden; background: var(--bg-2);
-  border: 1px solid var(--line);
-  box-shadow: 0 40px 120px -40px rgba(var(--glow), .55), 0 0 0 1px rgba(255,255,255,.02) inset;
-  transition: box-shadow 1.2s ease;
-}
-.stage > img.photo { width: 100%; height: 100%; object-fit: cover; animation: reveal .7s cubic-bezier(.2,.7,.2,1) both; }
-@keyframes reveal { from { opacity: 0; transform: scale(1.03); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
-.stage .placeholder {
-  position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 8px; padding: 28px;
-  background: radial-gradient(60% 50% at 50% 38%, rgba(255,255,255,.07), transparent 70%), linear-gradient(180deg, transparent 60%, rgba(255,255,255,.03));
-}
-.stage .placeholder .floor { position: absolute; left: 18%; right: 18%; bottom: 22%; height: 18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.6), transparent); }
-.stage .placeholder strong { font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 22px; }
-.stage .placeholder span { color: var(--text-2); font-size: 14px; }
-.badge {
-  position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-  padding: 6px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.stage-tools { position: absolute; right: 14px; top: 14px; display: flex; gap: 8px; }
-.icon-btn {
-  appearance: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; text-decoration: none;
-  background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.14); color: #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.icon-btn:hover { background: rgba(0,0,0,.65); }
-.icon-btn svg { width: 18px; height: 18px; }
-.busy { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; padding: 24px; background: rgba(9,9,11,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.busy .orb { width: 54px; height: 54px; border-radius: 50%; background: conic-gradient(from 0deg, transparent, rgb(var(--glow)), transparent 60%); animation: spin 1s linear infinite; -webkit-mask: radial-gradient(circle, transparent 55%, #000 57%); mask: radial-gradient(circle, transparent 55%, #000 57%); }
-@keyframes spin { to { transform: rotate(360deg); } }
-.busy span { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
-
-/* Bearbeiten */
-.composer { padding: 8px; border-radius: 999px; display: flex; gap: 8px; align-items: center; }
-.composer input {
-  flex: 1; min-width: 0; border: 0; background: none; padding: 10px 12px 10px 16px; color: var(--text); font-size: 15px;
-}
-.composer input::placeholder { color: var(--text-3); }
-.composer input:focus { outline: none; }
-.composer:focus-within { border-color: rgba(var(--glow), .6); box-shadow: 0 0 0 4px rgba(var(--glow), .12); }
-.send {
-  appearance: none; flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
-  background: var(--text); color: #0B0B0D;
-}
-.send:disabled { opacity: .35; cursor: not-allowed; }
-.send svg { width: 18px; height: 18px; }
-.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  appearance: none; flex: none; cursor: pointer; border-radius: 999px; padding: 8px 13px; font-size: 13px; color: var(--text-2);
-  background: rgba(255,255,255,.03); border: 1px solid var(--line); white-space: nowrap;
-}
-.chip:hover { color: var(--text); border-color: var(--line-strong); }
-.chip:disabled { opacity: .4; cursor: not-allowed; }
-.hint { font-size: 12px; color: var(--text-3); margin: 0; padding-left: 4px; }
-
-.versions { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: thin; }
-.ver { appearance: none; flex: none; width: 74px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; gap: 5px; text-align: left; }
-.ver img { width: 74px; height: 74px; object-fit: cover; border-radius: 12px; border: 2px solid transparent; opacity: .6; transition: opacity .15s ease, border-color .15s ease; }
-.ver span { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ver:hover img { opacity: .9; }
-.ver[aria-current="true"] img { opacity: 1; border-color: rgb(var(--glow)); }
-.ver[aria-current="true"] span { color: var(--text); }
-
-.notice { margin: 0; font-size: 14px; padding: 12px 14px; border-radius: var(--r-sm); background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.3); color: #FFD3D3; }
-
-/* Archiv */
-.archive { padding-block: 40px 72px; display: grid; gap: 18px; }
-.archive-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.archive h3 { margin: 0; font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; }
-.archive-head .count { font-family: var(--mono); font-size: 12px; color: var(--text-3); }
-.sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
-.thumb { appearance: none; border: 0; background: none; padding: 0; cursor: pointer; text-align: left; display: grid; gap: 8px; color: var(--text); }
-.thumb .ph { aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); }
-.thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
-.thumb:hover img { transform: scale(1.05); }
-.thumb small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: .04em; text-transform: uppercase; }
-.thumb span { font-size: 14px; font-weight: 500; line-height: 1.3; }
-.archive .none { color: var(--text-3); margin: 0; }
-.linkish { appearance: none; border: 0; background: none; padding: 0; font-family: var(--mono); font-size: 12px; color: var(--text-3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.linkish:hover { color: var(--text-2); }
-
-@media (max-width: 900px) {
-  main.grid { grid-template-columns: 1fr; grid-template-areas: "draw" "studio" "spec"; gap: 18px; padding-top: 20px; }
-  .studio { position: static; }
-  .draw, .spec { padding: 20px; }
-  .slot-word { font-size: clamp(34px, 10vw, 56px); }
-  .own-form { grid-template-columns: 1fr 1fr; }
-  .own-form .btn { grid-column: 1 / -1; justify-content: center; }
-  .stage { border-radius: 22px; }
-  .sheet { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  main.grid { grid-template-rows: none; }
-}
-@media (max-width: 420px) { #dropNo { display: none; } }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before { animation: none !important; transition: none !important; }
-}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <header class="top">
   <div class="wrap top-inner">
-    <span class="brandmark"><i aria-hidden="true"></i>Unmögliche Kollabs</span>
-    <span class="top-meta"><span id="dropNo">Drop Nr. 001</span><a href="#archiv">Archiv</a></span>
+    <a class="brandmark" href="#studio" style="color:inherit;text-decoration:none"><i aria-hidden="true"></i><span class="full">Unmögliche Kollabs</span></a>
+    <nav class="tabs" aria-label="Bereiche">
+      <a href="#studio">Studio</a>
+      <a href="#spielen">Spielen</a>
+      <a href="#profil">Profil</a>
+    </nav>
   </div>
 </header>
 
-<main class="wrap grid">
-  <section class="panel draw" aria-label="Ziehung">
-    <div class="slot">
-      <span class="label"><span>Marke</span><span>Antippen = neu</span></span>
-      <button class="slot-word" id="brand" type="button">Ferrari</button>
-    </div>
-    <div class="cross-row" aria-hidden="true"><span>×</span><hr></div>
-    <div class="slot">
-      <span class="label"><span>Produkt</span><span>Antippen = neu</span></span>
-      <button class="slot-word" id="product" type="button">Kinderwagen</button>
-    </div>
-    <div class="actions">
-      <button class="btn primary" id="designBtn" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-        Entwerfen
-      </button>
-      <button class="btn" id="rollBtn" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/></svg>
-        Neu ziehen
-      </button>
-    </div>
-    <details class="own">
-      <summary>Eigene Kombination eingeben</summary>
-      <form class="own-form" id="ownForm">
-        <input class="field" id="ownBrand" placeholder="Marke, z. B. Gucci" maxlength="40" autocomplete="off">
-        <input class="field" id="ownProduct" placeholder="Produkt, z. B. Mülltonne" maxlength="40" autocomplete="off">
-        <button class="btn small" type="submit">Übernehmen</button>
-      </form>
-    </details>
-  </section>
-
-  <section class="studio" aria-label="Studio">
-    <div class="stage" id="stage">
-      <div class="placeholder">
-        <div class="floor"></div>
-        <strong>Die Bühne ist frei</strong>
-        <span>Tipp auf „Entwerfen“. Nach 10 bis 20 Sekunden steht hier dein Produktfoto.</span>
+<!-- Studio (allein) -->
+<div id="view-studio" class="view">
+  <main class="wrap grid">
+    <section class="panel draw" aria-label="Ziehung">
+      <div class="slot">
+        <span class="label"><span>Marke</span><span>Antippen = neu</span></span>
+        <button class="slot-word" id="brand" type="button">Ferrari</button>
       </div>
+      <div class="cross-row" aria-hidden="true"><span>×</span><hr></div>
+      <div class="slot">
+        <span class="label"><span>Produkt</span><span>Antippen = neu</span></span>
+        <button class="slot-word" id="product" type="button">Kinderwagen</button>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="designBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+          Entwerfen
+        </button>
+        <button class="btn" id="rollBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/></svg>
+          Neu ziehen
+        </button>
+      </div>
+      <details class="own">
+        <summary>Eigene Kombination eingeben</summary>
+        <form class="own-form" id="ownForm">
+          <input class="field" id="ownBrand" placeholder="Marke, z. B. Gucci" maxlength="40" autocomplete="off">
+          <input class="field" id="ownProduct" placeholder="Produkt, z. B. Mülltonne" maxlength="40" autocomplete="off">
+          <button class="btn small" type="submit">Übernehmen</button>
+        </form>
+      </details>
+    </section>
+    <section class="studio" id="soloStudio" aria-label="Studio"></section>
+    <section class="panel spec" id="soloSpec" aria-label="Datenblatt"></section>
+  </main>
+
+  <section class="wrap archive" id="archiv" aria-label="Archiv">
+    <div class="archive-head">
+      <h3>Archiv</h3>
+      <span class="count"><span id="archiveCount"></span> <button class="linkish" id="clearBtn" type="button" hidden>Archiv leeren</button></span>
     </div>
-
-    <form class="panel composer" id="editForm" autocomplete="off">
-      <input id="editInput" maxlength="300" placeholder="Etwas ändern? z. B. „in Mattschwarz“ oder „auf einer Rennstrecke“" disabled>
-      <button class="send" id="editSend" type="submit" aria-label="Änderung anwenden" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
-      </button>
-    </form>
-    <div class="chips" id="chips" aria-label="Schnelle Änderungen"></div>
-    <p class="hint" id="editHint">Optional: Nach dem ersten Foto kannst du es hier beliebig oft anpassen.</p>
-    <div class="versions" id="versions" hidden></div>
-    <p class="notice" id="notice" hidden></p>
+    <div class="sheet" id="sheet"></div>
+    <p class="none" id="noneNote">Deine Entwürfe und gemerkten Spiel-Produkte landen hier, nur auf diesem Gerät gespeichert.</p>
   </section>
+</div>
 
-  <section class="panel spec" id="spec" aria-label="Datenblatt">
-    <div class="head"><span class="collab" id="collab">Ferrari × Kinderwagen</span></div>
-    <p class="empty-note">Die KI erfindet Name, Slogan, Preis und Features und fotografiert das Produkt wie für einen echten Launch.</p>
-  </section>
-</main>
+<!-- Spielen -->
+<div id="view-spielen" class="view" hidden>
+  <div id="gameRoot"></div>
+</div>
 
-<section class="wrap archive" id="archiv" aria-label="Archiv">
-  <div class="archive-head">
-    <h3>Archiv</h3>
-    <span class="count"><span id="archiveCount"></span> <button class="linkish" id="clearBtn" type="button" hidden>Archiv leeren</button></span>
-  </div>
-  <div class="sheet" id="sheet"></div>
-  <p class="none" id="noneNote">Deine Entwürfe landen hier, nur auf diesem Gerät gespeichert.</p>
-</section>
+<!-- Profil -->
+<div id="view-profil" class="view" hidden>
+  <div id="profileRoot"></div>
+</div>
 
-<script>
-const BRANDS = ["Ferrari","Lamborghini","Porsche","Rolls-Royce","Bugatti","Tesla","IKEA","Apple","LEGO","Nike","Adidas","Gucci","Louis Vuitton","Chanel","Prada","Balenciaga","Supreme","Red Bull","Coca-Cola","McDonald's","Haribo","Milka","Nintendo","PlayStation","Dyson","Bosch","Miele","Victorinox","Rolex","NASA","Deutsche Bahn","Lufthansa","Jägermeister","Nutella","Barbie","Caterpillar","John Deere","Harley-Davidson","Moncler","Off-White","Tupperware","Crocs","BMW","Mercedes-AMG","Vespa","Hermès","Bang & Olufsen","Leica","Aston Martin","Ducati","Swarovski","Oakley","The North Face","Stihl","Teenage Engineering"];
-const PRODUCTS = ["Heißluftfritteuse","Toaster","Toilettenbürste","Rasenmäher","Kinderwagen","Elektrische Zahnbürste","Bügeleisen","Staubsauger","Gartenzwerg","Regenschirm","Kühlschrank","Hundehütte","Waschmaschine","Mikrowelle","Badelatschen","Brotdose","Wäscheständer","Schubkarre","Mülltonne","Wasserkocher","Thermoskanne","Fahrradhelm","Schneeschaufel","Föhn","Laubbläser","Bürostuhl","Campingstuhl","Pfeffermühle","Kuckucksuhr","Kugelgrill","Eierkocher","Rollator","Schulranzen","Hängematte","Duschkopf","Kaffeemaschine","Kühlbox","Bierkrug","Tischtennisplatte","Standmixer","Picknickkorb","Gießkanne","Zelt","Schreibtischlampe","Babyphone","Saugroboter","Einkaufswagen","Kinderrutsche","Briefkasten","Sauna"];
-const CHIPS = [
-  ["Andere Farbe", "in einer anderen, markentypischen Farbvariante"],
-  ["Von schräg oben", "aus einer Perspektive schräg von oben fotografiert"],
-  ["Im Showroom", "im edlen Showroom der Marke statt im Studio"],
-  ["Nahaufnahme", "als Nahaufnahme, die Materialien und Details zeigt"],
-  ["Weißer Hintergrund", "freigestellt auf reinweißem Studiohintergrund"],
-  ["Nacht & Neon", "bei Nacht mit Neonlicht und Spiegelungen"],
-  ["Mehr Luxus", "noch luxuriöser, mit edleren Materialien und mehr Details"],
-];
-
-const $ = (id) => document.getElementById(id);
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const state = { brand: "Ferrari", product: "Kinderwagen", busy: false, current: null };
-
-function h(tag, props = {}, kids = []) {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (k === "attrs") for (const [a, av] of Object.entries(v)) e.setAttribute(a, av);
-    else e[k] = v;
-  }
-  for (const k of [].concat(kids)) if (k != null) e.append(k);
-  return e;
-}
-function pick(list, not) { let v; do { v = list[Math.floor(Math.random() * list.length)]; } while (v === not && list.length > 1); return v; }
-function slug(s) { return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
-
-/* Ziehung */
-function roll(key, delay = 0) {
-  if (state.busy) return;
-  const list = key === "brand" ? BRANDS : PRODUCTS;
-  const final = pick(list, state[key]);
-  state[key] = final; updateCollab();
-  const el = $(key);
-  if (reduceMotion) { el.textContent = final; return; }
-  el.classList.add("rolling");
-  const end = Date.now() + 520 + delay;
-  (function tick() {
-    if (Date.now() < end) { el.textContent = pick(list); setTimeout(tick, 60); }
-    else { el.textContent = final; el.classList.remove("rolling"); }
-  })();
-}
-function updateCollab() { if (!state.current && $("collab")) $("collab").textContent = `${state.brand} × ${state.product}`; }
-
-/* Netzwerk */
-async function post(url, data) {
-  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-  const body = await r.json().catch(() => ({}));
-  if (!r.ok) { const e = new Error(body.message || "Fehler " + r.status); e.code = body.error; throw e; }
-  return body;
-}
-
-/* Status */
-function setBusy(on, msg) {
-  state.busy = on;
-  ["designBtn", "rollBtn", "brand", "product"].forEach((id) => { $(id).disabled = on; });
-  updateEditControls();
-  const old = $("stage").querySelector(".busy"); if (old) old.remove();
-  if (on) $("stage").append(h("div", { className: "busy" }, [h("div", { className: "orb" }), h("span", { id: "busyMsg", textContent: msg })]));
-}
-function busyMsg(t) { const m = $("busyMsg"); if (m) m.textContent = t; }
-function showError(e) {
-  let text = (e && e.message) || "Da ist etwas schiefgelaufen.";
-  if (e && e.code === "missing_config") text = "Die KI ist noch nicht verbunden: In Vercel fehlen CLOUDFLARE_ACCOUNT_ID und CLOUDFLARE_API_TOKEN.";
-  $("notice").textContent = text; $("notice").hidden = false;
-}
-function clearError() { $("notice").hidden = true; }
-function updateEditControls() {
-  const can = !!state.current && !state.busy;
-  $("editInput").disabled = !can;
-  $("editSend").disabled = !can || !$("editInput").value.trim();
-  document.querySelectorAll(".chip").forEach((c) => (c.disabled = !can));
-  $("editHint").textContent = state.current
-    ? "Schreib, was anders sein soll, oder tipp einen Vorschlag an. Jede Änderung wird eine neue Version."
-    : "Optional: Nach dem ersten Foto kannst du es hier beliebig oft anpassen.";
-}
-
-/* Farbe des Fotos für den Lichtschein */
-function ambientFrom(src) {
-  const img = new Image();
-  img.onload = () => {
-    try {
-      const c = document.createElement("canvas"); c.width = c.height = 24;
-      const x = c.getContext("2d"); x.drawImage(img, 0, 0, 24, 24);
-      const d = x.getImageData(0, 0, 24, 24).data;
-      let r = 0, g = 0, b = 0, w = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
-        const wt = (mx - mn) / 255 + 0.05;              // kräftige Farben zählen mehr
-        r += d[i] * wt; g += d[i + 1] * wt; b += d[i + 2] * wt; w += wt;
-      }
-      r /= w; g /= w; b /= w;
-      const mx = Math.max(r, g, b) || 1, k = 220 / mx;     // aufhellen
-      document.documentElement.style.setProperty("--glow", `${Math.round(r * k)}, ${Math.round(g * k)}, ${Math.round(b * k)}`);
-    } catch {}
-  };
-  img.src = src;
-}
-
-/* Darstellung */
-function currentVersion(e) { return e.versions[e.active] || e.versions[e.versions.length - 1]; }
-function render(e) {
-  state.current = e;
-  const v = currentVersion(e);
-  const stage = $("stage");
-  const download = h("a", { className: "icon-btn", href: v.image, download: `${slug(e.brand)}-${slug(e.product)}-v${e.active + 1}.jpg`, title: "Bild speichern", attrs: { "aria-label": "Bild speichern" } });
-  download.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
-  const reshoot = h("button", { className: "icon-btn", type: "button", title: "Neues Foto vom gleichen Konzept", attrs: { "aria-label": "Neues Foto vom gleichen Konzept" } });
-  reshoot.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>';
-  reshoot.addEventListener("click", reshootImage);
-  stage.replaceChildren(
-    h("img", { className: "photo", src: v.image, alt: `${e.name}: ${e.product} im Stil von ${e.brand}` }),
-    h("span", { className: "badge", textContent: "KI-Entwurf · nicht real" }),
-    h("div", { className: "stage-tools" }, [reshoot, download])
-  );
-  ambientFrom(v.image);
-
-  const vs = $("versions");
-  vs.hidden = e.versions.length < 2;
-  vs.replaceChildren(...e.versions.map((ver, i) => {
-    const b = h("button", { className: "ver", type: "button", attrs: { "aria-current": String(i === e.active), title: ver.label } }, [
-      h("img", { src: ver.image, alt: "" }), h("span", { textContent: i === 0 ? "Original" : ver.label }),
-    ]);
-    b.addEventListener("click", () => { if (state.busy) return; e.active = i; render(e); saveEntry(e); });
-    return b;
-  }));
-
-  const kids = [h("div", { className: "head" }, [
-    h("span", { className: "collab", textContent: `${e.brand} × ${e.product}` }),
-    e.price ? h("span", { className: "price", textContent: e.price }) : null,
-  ]), h("h2", { textContent: e.name })];
-  if (e.slogan) kids.push(h("p", { className: "slogan", textContent: `„${e.slogan}“` }));
-  if (e.description) kids.push(h("p", { className: "desc", textContent: e.description }));
-  if (e.features && e.features.length) kids.push(h("ul", { className: "features" }, e.features.map((f, i) => h("li", {}, [h("b", { textContent: String(i + 1).padStart(2, "0") }), f]))));
-  $("spec").replaceChildren(...kids);
-  updateEditControls();
-}
-
-/* Aktionen */
-async function design() {
-  if (state.busy) return;
-  const brand = state.brand, product = state.product;
-  clearError(); setBusy(true, "Konzept wird geschrieben …");
-  try {
-    const concept = await post("/api/concept", { brand, product });
-    busyMsg(`„${concept.name}“ wird fotografiert …`);
-    const img = await post("/api/image", { prompt: concept.image_prompt });
-    const entry = { ...concept, brand, product, versions: [{ image: img.image, label: "Original" }], active: 0, t: Date.now() };
-    state.busy = false;
-    render(entry);
-    await saveEntry(entry);
-  } catch (e) { showError(e); }
-  finally { setBusy(false); }
-}
-
-async function reshootImage() {
-  const e = state.current; if (!e || state.busy) return;
-  clearError(); setBusy(true, "Neues Foto wird gemacht …");
-  try {
-    const img = await post("/api/image", { prompt: e.image_prompt });
-    e.versions.push({ image: img.image, label: "Neues Foto" }); e.active = e.versions.length - 1; e.t = Date.now();
-    state.busy = false; render(e); await saveEntry(e);
-  } catch (err) { showError(err); }
-  finally { setBusy(false); }
-}
-
-function downscale(src, size) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas"); c.width = c.height = size;
-      const s = Math.min(img.width, img.height);
-      c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
-      resolve(c.toDataURL("image/jpeg", 0.9));
-    };
-    img.onerror = reject; img.src = src;
-  });
-}
-
-async function applyEdit(instruction, label) {
-  const e = state.current; if (!e || state.busy || !instruction) return;
-  clearError(); setBusy(true, "Wird angepasst …");
-  try {
-    const small = await downscale(currentVersion(e).image, 504);
-    const r = await post("/api/edit", { image: small, instruction, brand: e.brand, product: e.product, image_prompt: e.image_prompt });
-    e.versions.push({ image: r.image, label: label || instruction }); e.active = e.versions.length - 1; e.t = Date.now();
-    $("editInput").value = "";
-    state.busy = false; render(e); await saveEntry(e);
-  } catch (err) { showError(err); }
-  finally { setBusy(false); }
-}
-
-/* Archiv (IndexedDB) */
-let dbp = null;
-function db() {
-  if (!dbp) dbp = new Promise((res, rej) => {
-    const r = indexedDB.open("kollabs", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-  });
-  return dbp;
-}
-async function store(mode) { return (await db()).transaction("entries", mode).objectStore("entries"); }
-function req2p(r) { return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
-function normalize(e) { if (!e.versions) { e.versions = [{ image: e.image, label: "Original" }]; e.active = 0; } return e; }
-async function saveEntry(e) {
-  try {
-    const copy = JSON.parse(JSON.stringify(e)); if (copy.id == null) delete copy.id;
-    e.id = await req2p((await store("readwrite")).put(copy));
-    await renderArchive();
-  } catch {}
-}
-async function allEntries() {
-  try { return (await req2p((await store("readonly")).getAll())).map(normalize).sort((a, b) => b.t - a.t); } catch { return []; }
-}
-async function renderArchive() {
-  const items = await allEntries();
-  $("sheet").replaceChildren(...items.map((it) => {
-    const b = h("button", { className: "thumb", type: "button" }, [
-      h("div", { className: "ph" }, h("img", { src: currentVersion(it).image, alt: "", loading: "lazy" })),
-      h("div", {}, [h("small", { textContent: `${it.brand} × ${it.product}` }), h("span", { textContent: it.name })]),
-    ]);
-    b.addEventListener("click", () => {
-      if (state.busy) return;
-      state.brand = it.brand; state.product = it.product;
-      $("brand").textContent = it.brand; $("product").textContent = it.product;
-      clearError(); render(it);
-      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
-    });
-    return b;
-  }));
-  $("noneNote").hidden = items.length > 0;
-  $("clearBtn").hidden = items.length === 0;
-  $("archiveCount").textContent = items.length ? `${items.length} Entwürfe ·` : "";
-  $("dropNo").textContent = "Drop Nr. " + String(items.length + 1).padStart(3, "0");
-}
-
-/* Ereignisse */
-CHIPS.forEach(([label, instr]) => {
-  const c = h("button", { className: "chip", type: "button", textContent: label, disabled: true });
-  c.addEventListener("click", () => applyEdit(instr, label));
-  $("chips").append(c);
-});
-$("editInput").addEventListener("input", updateEditControls);
-$("editForm").addEventListener("submit", (ev) => { ev.preventDefault(); const t = $("editInput").value.trim(); if (t) applyEdit(t); });
-$("brand").addEventListener("click", () => roll("brand"));
-$("product").addEventListener("click", () => roll("product"));
-$("rollBtn").addEventListener("click", () => { roll("brand"); roll("product", 260); });
-$("designBtn").addEventListener("click", design);
-$("ownForm").addEventListener("submit", (ev) => {
-  ev.preventDefault();
-  const b = $("ownBrand").value.trim(), p = $("ownProduct").value.trim();
-  if (b) { state.brand = b; $("brand").textContent = b; }
-  if (p) { state.product = p; $("product").textContent = p; }
-  updateCollab();
-});
-let clearArmed = false;
-$("clearBtn").addEventListener("click", async () => {
-  if (!clearArmed) { clearArmed = true; $("clearBtn").textContent = "Wirklich alles löschen?"; setTimeout(() => { clearArmed = false; $("clearBtn").textContent = "Archiv leeren"; }, 4000); return; }
-  clearArmed = false; $("clearBtn").textContent = "Archiv leeren";
-  try { await req2p((await store("readwrite")).clear()); } catch {}
-  renderArchive();
-});
-
-state.brand = pick(BRANDS); state.product = pick(PRODUCTS);
-$("brand").textContent = state.brand; $("product").textContent = state.product; updateCollab();
-renderArchive();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.79.0/dist/umd/supabase.js"></script>
+<script src="/js/core.js"></script>
+<script src="/js/solo.js"></script>
+<script src="/js/game.js"></script>
+<script src="/js/account.js"></script>
+<script src="/js/main.js"></script>
 </body>
 </html>
